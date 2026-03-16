@@ -1,7 +1,7 @@
 import time
 
 import structlog
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, status
 
 from app.auth import require_api_key
 from app.config import Settings, get_settings
@@ -11,6 +11,7 @@ from app.models.schemas import (
     CollectionListResponse,
     CollectionResponse,
     CollectionSchema,
+    ErrorResponse,
 )
 from app.services.collection_manager import get_collection_or_404, list_collections
 from app.services.query_builder import build_query
@@ -19,8 +20,25 @@ logger = structlog.stdlib.get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["collections"])
 
+_AUTH_RESP = {
+    status.HTTP_401_UNAUTHORIZED: {
+        "model": ErrorResponse,
+        "description": "Missing or invalid API key",
+    }
+}
+_NOT_FOUND = {
+    status.HTTP_404_NOT_FOUND: {
+        "model": ErrorResponse,
+        "description": "Collection not found",
+    }
+}
 
-@router.get("/collections", response_model=CollectionListResponse)
+
+@router.get(
+    "/collections",
+    response_model=CollectionListResponse,
+    responses=_AUTH_RESP,
+)
 async def list_all_collections(
     request: Request,
     _key: str = Depends(require_api_key),
@@ -31,7 +49,11 @@ async def list_all_collections(
     return CollectionListResponse(collections=collections)
 
 
-@router.get("/collections/{name}/schema", response_model=CollectionSchema)
+@router.get(
+    "/collections/{name}/schema",
+    response_model=CollectionSchema,
+    responses={**_AUTH_RESP, **_NOT_FOUND},
+)
 async def get_collection_schema(
     name: str,
     request: Request,
@@ -43,7 +65,18 @@ async def get_collection_schema(
     return CollectionSchema(name=meta["name"], columns=meta["columns"])
 
 
-@router.get("/collections/{name}", response_model=CollectionResponse)
+@router.get(
+    "/collections/{name}",
+    response_model=CollectionResponse,
+    responses={
+        **_AUTH_RESP,
+        **_NOT_FOUND,
+        422: {
+            "model": ErrorResponse,
+            "description": "Invalid query parameters",
+        },
+    },
+)
 async def query_collection(
     name: str,
     request: Request,
@@ -94,7 +127,11 @@ async def query_collection(
     )
 
 
-@router.get("/collections/{name}/{record_id}", response_model=dict[str, object])
+@router.get(
+    "/collections/{name}/{record_id}",
+    response_model=dict[str, object],
+    responses={**_AUTH_RESP, **_NOT_FOUND},
+)
 async def get_record(
     name: str,
     record_id: int,

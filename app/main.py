@@ -31,7 +31,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_db(db)
 
 
-app = FastAPI(title="factAPI", version="0.1.0", lifespan=lifespan)
+API_DESCRIPTION = """\
+Turn any CSV into a queryable REST API. Upload a CSV file, get a full-featured
+API with filtering, sorting, pagination, full-text search, and JSON field support.
+
+## Authentication
+
+- **Read endpoints** require the `X-API-Key` header (skip if `FACTAPI_API_KEY` is unset).
+- **Admin endpoints** require the `X-Admin-Key` header (skip if `FACTAPI_ADMIN_KEY` is unset).
+
+## Query Parameters
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `column=value` | `country=Japan` | Exact match |
+| `column__gt` | `price__gt=100` | Greater than |
+| `column__gte` / `__lt` / `__lte` | `age__gte=18` | Comparison operators |
+| `column__like` | `name__like=%smith%` | Pattern match |
+| `column__in` | `status__in=a,b` | Match any in list |
+| `json_col.path` | `metadata.color=red` | JSON dot-notation |
+| `_sort` | `_sort=-population` | Sort (prefix `-` = DESC) |
+| `_limit` / `_offset` | `_limit=25&_offset=50` | Pagination |
+| `_fields` | `_fields=name,price` | Select columns |
+| `_search` | `_search=tokyo` | Full-text search |
+"""
+
+app = FastAPI(
+    title="factAPI",
+    version="0.1.0",
+    description=API_DESCRIPTION,
+    lifespan=lifespan,
+)
 
 settings = get_settings()
 app.add_middleware(RequestMiddleware)
@@ -55,6 +85,7 @@ async def factapi_error_handler(request: Request, exc: FactAPIError) -> JSONResp
     )
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.get("/health", response_model=HealthResponse, tags=["system"])
 async def health() -> HealthResponse:
+    """Check if the API is running."""
     return HealthResponse(status="healthy", version="0.1.0")
