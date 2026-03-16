@@ -1,0 +1,20 @@
+services:
+  factapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8484:8000"
+    volumes:
+      - factapi-data:/data
+    env_file: stack.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  factapi-data:

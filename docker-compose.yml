@@ -1,0 +1,12 @@
+services:
+  factapi:
+    build: .
+    ports:
+      - "8484:8000"
+    volumes:
+      - ./data:/data
+    env_file: .env
+    environment:
+      FACTAPI_DB_PATH: /data/factapi.db
+      FACTAPI_ENV: production
+    restart: unless-stopped
