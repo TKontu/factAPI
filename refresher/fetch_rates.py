@@ -35,7 +35,7 @@ STARTUP_WAIT = int(os.environ.get("REFRESHER_STARTUP_WAIT_SECONDS", "60"))
 
 COLLECTION = "fx_rates"
 SEED_START = date(1999, 1, 4)  # First ECB EUR reference rate publication
-FRANKFURTER_BASE = "https://api.frankfurter.app"
+FRANKFURTER_BASE = "https://api.frankfurter.dev/v1"
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0  # seconds; doubles each attempt
 
