@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    model_config = {"env_prefix": "FACTAPI_", "env_file": ".env"}
+    model_config = {"env_prefix": "FACTAPI_", "env_file": ".env", "extra": "ignore"}
 
     db_path: str = "data/factapi.db"
     api_key: str = ""

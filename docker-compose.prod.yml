@@ -16,5 +16,20 @@ services:
       retries: 3
       start_period: 10s
 
+  fx-refresher:
+    build:
+      context: ./refresher
+      dockerfile: Dockerfile
+    depends_on:
+      factapi:
+        condition: service_healthy
+    environment:
+      REFRESHER_FACTAPI_URL: http://factapi:8000
+      REFRESHER_ADMIN_KEY: ${FACTAPI_ADMIN_KEY}
+      REFRESHER_API_KEY: ${FACTAPI_API_KEY}
+      REFRESHER_LOG_LEVEL: ${REFRESHER_LOG_LEVEL:-info}
+      REFRESHER_STARTUP_WAIT_SECONDS: ${REFRESHER_STARTUP_WAIT_SECONDS:-60}
+    restart: unless-stopped
+
 volumes:
   factapi-data:

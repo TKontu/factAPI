@@ -1,0 +1,1 @@
+30 18 * * * . /etc/refresher.env; python /app/fetch_rates.py --update >> /proc/1/fd/1 2>&1
